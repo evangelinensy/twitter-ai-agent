@@ -1,0 +1,26 @@
+{
+  "name": "twitter-agent",
+  "version": "1.0.0",
+  "description": "Fetches your Twitter bookmarks, uses Claude AI to rewrite them, and auto-posts at optimal times.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.51.0",
+    "@modelcontextprotocol/sdk": "^1.11.5",
+    "@types/express": "^5.0.2",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "node-cron": "^4.0.6",
+    "twitter-api-v2": "^1.23.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3"
+  }
+}
