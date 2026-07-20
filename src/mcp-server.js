@@ -6,20 +6,18 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const {
-    TWITTER_ACCESS_TOKEN,
-    TWITTER_REFRESH_TOKEN,
-    TWITTER_CLIENT_ID,
-    TWITTER_CLIENT_SECRET,
-    CLAUDE_API_KEY
-} = process.env;
-
-if (!TWITTER_ACCESS_TOKEN || !TWITTER_REFRESH_TOKEN || !TWITTER_CLIENT_ID || !TWITTER_CLIENT_SECRET) {
-    throw new Error('Missing OAuth 2.0 credentials in .env file!');
+function requiredEnvironmentVariable(name: string): string {
+    const value = process.env[name];
+    if (!value) {
+        throw new Error(`Missing ${name} in .env file!`);
+    }
+    return value;
 }
 
-let currentAccessToken = TWITTER_ACCESS_TOKEN;
-let currentRefreshToken = TWITTER_REFRESH_TOKEN;
+let currentAccessToken = requiredEnvironmentVariable('TWITTER_ACCESS_TOKEN');
+let currentRefreshToken = requiredEnvironmentVariable('TWITTER_REFRESH_TOKEN');
+const twitterClientId = requiredEnvironmentVariable('TWITTER_CLIENT_ID');
+const twitterClientSecret = requiredEnvironmentVariable('TWITTER_CLIENT_SECRET');
 
 // Create Twitter client
 let twitterClient = new TwitterApi(currentAccessToken);
@@ -33,24 +31,21 @@ async function refreshTokensIfNeeded() {
         console.log('🔄 Refreshing tokens...');
 
         const refreshClient = new TwitterApi({
-            clientId: TWITTER_CLIENT_ID!,
-            clientSecret: TWITTER_CLIENT_SECRET!,
+            clientId: twitterClientId,
+            clientSecret: twitterClientSecret,
         });
 
         const { accessToken, refreshToken } = await refreshClient.refreshOAuth2Token(currentRefreshToken);
 
         // Update current tokens
         currentAccessToken = accessToken;
-        currentRefreshToken = refreshToken;
+        currentRefreshToken = refreshToken ?? currentRefreshToken;
 
         // Create new client with fresh tokens
         twitterClient = new TwitterApi(currentAccessToken);
         v2 = twitterClient.v2;
 
         console.log('✅ Tokens refreshed automatically!');
-        console.log('📝 New tokens (update your .env file):');
-        console.log(`TWITTER_ACCESS_TOKEN=${accessToken}`);
-        console.log(`TWITTER_REFRESH_TOKEN=${refreshToken}`);
 
         return true;
     } catch (error) {
@@ -75,8 +70,8 @@ export async function getBookmarks() {
             'user.fields': ['username', 'name']
         });
 
-        console.log(`📊 Found ${bookmarks.data?.length || 0} bookmarks`);
-        return bookmarks.data ?? [];
+        console.log(`📊 Found ${bookmarks.tweets.length} bookmarks`);
+        return bookmarks.tweets;
 
     } catch (error: any) {
         // Auto-refresh on 401 error
@@ -96,8 +91,8 @@ export async function getBookmarks() {
                         'user.fields': ['username', 'name']
                     });
 
-                    console.log(`📊 Found ${bookmarks.data?.length || 0} bookmarks`);
-                    return bookmarks.data ?? [];
+                    console.log(`📊 Found ${bookmarks.tweets.length} bookmarks`);
+                    return bookmarks.tweets;
                 } catch (retryError) {
                     console.error('❌ Error after token refresh:', retryError);
                     return [];
